@@ -1,26 +1,36 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Collections;
+using UnityEngine.XR;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] float health;
-    [SerializeField] float recoilLength;
-    [SerializeField] float recoilFactor;
-    [SerializeField] bool isRecoiling = false;
+    [SerializeField] protected float health;
+    [SerializeField] protected float recoilLength;
+    [SerializeField] protected float recoilFactor;
+    [SerializeField] protected bool isRecoiling = false;
 
-    float recoilTimer;
-    Rigidbody2D rb;
+    [SerializeField] protected PlayerController player;
+    [SerializeField] protected float speed;
 
-    void Start()
+    [SerializeField] protected float damage;
+
+    protected float recoilTimer;
+    protected Rigidbody2D rb;
+
+    protected virtual void Start() 
     {
         
     }
 
-    private void Awake()
+    protected virtual void Awake() 
     {
         rb = GetComponent<Rigidbody2D>();
+        player = PlayerController.Instance;
     }
 
-    void Update()
+    protected virtual void Update()
     {
         if(health <= 0)
         {
@@ -40,12 +50,27 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void EnemyHit(float _damageDone, Vector2 _hitDirection, float _hitForce)
+    public virtual void EnemyHit(float _damageDone, Vector2 _hitDirection, float _hitForce)
     {
         health -= _damageDone;
         if(!isRecoiling)
         {
             rb.AddForce(-_hitForce * recoilFactor * _hitDirection);
+            isRecoiling=true;
         }
+    }
+
+    protected void OnTriggerStay2D(Collider2D _other)
+    {
+        if(_other.CompareTag("Player") && !PlayerController.Instance.pState.invincible)
+        {
+            Attack();
+            PlayerController.Instance.HitStopTime(0, 5, 0.5f);
+        }
+    }
+
+    protected virtual void Attack()
+    {
+        PlayerController.Instance.TakeDamage(damage);
     }
 }

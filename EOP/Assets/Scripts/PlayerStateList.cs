@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class PlayerStateList : MonoBehaviour
 {
@@ -6,4 +9,5 @@ public class PlayerStateList : MonoBehaviour
     public bool dashing = false;
     public bool recoilingX, recoilingY;
     public bool lookingRight;
+    public bool invincible;
 }
