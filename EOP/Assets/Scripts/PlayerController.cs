@@ -4,75 +4,85 @@ using UnityEngine;
 using UnityEngine.XR;
 using Unity.Mathematics;
 using UnityEngine.UI;
+using Unity.VisualScripting; 
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Horizontal Movement Settings:")]
-    [SerializeField] private float walkSpeed = 1; 
+    [SerializeField] private float walkSpeed = 1; //sets the players movement speed on the ground
     [Space(5)]
+
+
 
     [Header("Vertical Movement Settings")]
-    [SerializeField] private float jumpForce = 45f; 
+    [SerializeField] private float jumpForce = 45f; //sets how hight the player can jump
 
-    private float jumpBufferCounter = 0; 
-    [SerializeField] private float jumpBufferFrames; 
+    private float jumpBufferCounter = 0; //stores the jump button input
+    [SerializeField] private float jumpBufferFrames; //sets the max amount of frames the jump buffer input is stored
 
-    private float coyoteTimeCounter = 0; 
-    [SerializeField] private float coyoteTime; 
+    private float coyoteTimeCounter = 0; //stores the Grounded() bool
+    [SerializeField] private float coyoteTime; //sets the max amount of frames the Grounded() bool is stored
 
-    private int airJumpCounter = 0; 
-    [SerializeField] private int maxAirJumps; 
+    private int airJumpCounter = 0; //keeps track of how many times the player has jumped in the air
+    [SerializeField] private int maxAirJumps; //the max no. of air jumps
 
-    private float gravity; 
+    private float gravity; //stores the gravity scale at start
     [Space(5)]
+
+
 
     [Header("Ground Check Settings:")]
-    [SerializeField] private Transform groundCheckPoint; 
-    [SerializeField] private float groundCheckY = 0.2f;
-    [SerializeField] private float groundCheckX = 0.5f;
-    [SerializeField] private LayerMask whatIsGround; 
+    [SerializeField] private Transform groundCheckPoint; //point at which ground check happens
+    [SerializeField] private float groundCheckY = 0.2f; //how far down from ground chekc point is Grounded() checked
+    [SerializeField] private float groundCheckX = 0.5f; //how far horizontally from ground chekc point to the edge of the player is
+    [SerializeField] private LayerMask whatIsGround; //sets the ground layer
     [Space(5)]
 
+
+
     [Header("Dash Settings")]
-    [SerializeField] private float dashSpeed; 
-    [SerializeField] private float dashTime; 
-    [SerializeField] private float dashCooldown; 
+    [SerializeField] private float dashSpeed; //speed of the dash
+    [SerializeField] private float dashTime; //amount of time spent dashing
+    [SerializeField] private float dashCooldown; //amount of time between dashes
     [SerializeField] GameObject dashEffect;
     private bool canDash = true, dashed;
     [Space(5)]
 
+
+
     [Header("Attack Settings:")]
+    [SerializeField] private Transform SideAttackTransform; //the middle of the side attack area
+    [SerializeField] private Vector2 SideAttackArea; //how large the area of side attack is
 
-    [SerializeField] private Transform SideAttackTransform; 
-    [SerializeField] private Vector2 SideAttackArea; 
+    [SerializeField] private Transform UpAttackTransform; //the middle of the up attack area
+    [SerializeField] private Vector2 UpAttackArea; //how large the area of side attack is
 
-    [SerializeField] private Transform UpAttackTransform; 
-    [SerializeField] private Vector2 UpAttackArea;
+    [SerializeField] private Transform DownAttackTransform; //the middle of the down attack area
+    [SerializeField] private Vector2 DownAttackArea; //how large the area of down attack is
 
-    [SerializeField] private Transform DownAttackTransform;
-    [SerializeField] private Vector2 DownAttackArea; 
-
-    [SerializeField] private LayerMask attackableLayer; 
+    [SerializeField] private LayerMask attackableLayer; //the layer the player can attack and recoil off of
 
     [SerializeField] private float timeBetweenAttack;
     private float timeSinceAttack;
 
-    [SerializeField] private float damage; 
+    [SerializeField] private float damage; //the damage the player does to an enemy
 
-    [SerializeField] private GameObject slashEffect; 
+    [SerializeField] private GameObject slashEffect; //the effect of the slashs
 
     bool restoreTime;
     float restoreTimeSpeed;
     [Space(5)]
 
+
+
     [Header("Recoil Settings:")]
-    [SerializeField] private int recoilXSteps = 5; 
-    [SerializeField] private int recoilYSteps = 5; 
+    [SerializeField] private int recoilXSteps = 5; //how many FixedUpdates() the player recoils horizontally for
+    [SerializeField] private int recoilYSteps = 5; //how many FixedUpdates() the player recoils vertically for
 
-    [SerializeField] private float recoilXSpeed = 100; 
-    [SerializeField] private float recoilYSpeed = 100; 
+    [SerializeField] private float recoilXSpeed = 100; //the speed of horizontal recoil
+    [SerializeField] private float recoilYSpeed = 100; //the speed of vertical recoil
 
-    private int stepsXRecoiled, stepsYRecoiled; 
+    private int stepsXRecoiled, stepsYRecoiled; //the no. of steps recoiled horizontally and verticall
     [Space(5)]
 
     [Header("Health Settings")]
@@ -80,10 +90,8 @@ public class PlayerController : MonoBehaviour
     public int maxHealth;
     [SerializeField] GameObject bloodSpurt;
     [SerializeField] float hitFlashSpeed;
-
     public delegate void OnHealthChangedDelegate();
     [HideInInspector] public OnHealthChangedDelegate onHealthChangedCallback;
-    [Space(5)]
 
     float healTimer;
     [SerializeField] float timeToHeal;
@@ -97,6 +105,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float manaGain;
     [Space(5)]
 
+    [Header("Spell Settings")]
+    //spell stats
+    [SerializeField] float manaSpellCost = 0.3f;
+    [SerializeField] float timeBetweenCast = 0.5f;
+    [SerializeField] float spellDamage; //upspellexplosion and downspellfireball
+    [SerializeField] float downSpellForce; // desolate dive only
+    //spell cast objects
+    [SerializeField] GameObject sideSpellFireball;
+    [SerializeField] GameObject upSpellExplosion;
+    [SerializeField] GameObject downSpellFireball;
+    float timeSinceCast;
+    float castOrHealtimer;
+    [Space(5)]
+
+
     [HideInInspector] public PlayerStateList pState;
     private Animator anim;
     private Rigidbody2D rb;
@@ -107,6 +130,7 @@ public class PlayerController : MonoBehaviour
     private bool attack = false;
 
 
+    //creates a singleton of the PlayerController
     public static PlayerController Instance;
 
     private void Awake()
@@ -119,7 +143,8 @@ public class PlayerController : MonoBehaviour
         {
             Instance = this;
         }
-        Health = maxHealth;
+        DontDestroyOnLoad(gameObject);
+
     }
 
 
@@ -138,6 +163,7 @@ public class PlayerController : MonoBehaviour
         Mana = mana;
         manaStorage.fillAmount = Mana;
 
+        Health = maxHealth;
     }
 
     private void OnDrawGizmos()
@@ -155,19 +181,28 @@ public class PlayerController : MonoBehaviour
         UpdateJumpVariables();
 
         if (pState.dashing) return;
-        Flip();
+        RestoreTimeScale();
+        FlashWhileInvincible();
         Move();
+        Heal();
+        CastSpell();
+        if (pState.healing) return;
+        Flip();
         Jump();
         StartDash();
         Attack();
-        RestoreTimeScale();
-        FlashWhileInvincible();
-        Heal();
+    }
+    private void OnTriggerEnter2D(Collider2D _other) //for up and down cast spell
+    {
+        if (_other.GetComponent<Enemy>() != null && pState.casting)
+        {
+            _other.GetComponent<Enemy>().EnemyHit(spellDamage, (_other.transform.position - transform.position).normalized, -recoilYSpeed);
+        }
     }
 
     private void FixedUpdate()
     {
-        if (pState.dashing) return;
+        if (pState.dashing || pState.healing) return;
         Recoil();
     }
 
@@ -176,6 +211,15 @@ public class PlayerController : MonoBehaviour
         xAxis = Input.GetAxisRaw("Horizontal");
         yAxis = Input.GetAxisRaw("Vertical");
         attack = Input.GetButtonDown("Attack");
+
+        if(Input.GetButton("Cast/Heal"))
+        {
+            castOrHealtimer += Time.deltaTime;
+        }
+        else
+        {
+            castOrHealtimer = 0;
+        }
     }
 
     void Flip()
@@ -194,6 +238,7 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
+        if (pState.healing) rb.linearVelocity = new Vector2(0, 0);
         rb.linearVelocity = new Vector2(walkSpeed * xAxis, rb.linearVelocity.y);
         anim.SetBool("Walking", rb.linearVelocity.x != 0 && Grounded());
     }
@@ -218,7 +263,8 @@ public class PlayerController : MonoBehaviour
         pState.dashing = true;
         anim.SetTrigger("Dashing");
         rb.gravityScale = 0;
-        rb.linearVelocity = new Vector2(transform.localScale.x * dashSpeed, 0);
+        int _dir = pState.lookingRight ? 1 : -1;
+        rb.linearVelocity = new Vector2(_dir * dashSpeed, 0);
         if (Grounded()) Instantiate(dashEffect, transform);
         yield return new WaitForSeconds(dashTime);
         rb.gravityScale = gravity;
@@ -349,28 +395,23 @@ public class PlayerController : MonoBehaviour
         stepsYRecoiled = 0;
         pState.recoilingY = false;
     }
-
     public void TakeDamage(float _damage)
     {
         Health -= Mathf.RoundToInt(_damage);
         StartCoroutine(StopTakingDamage());
     }
-
     IEnumerator StopTakingDamage()
     {
         pState.invincible = true;
-        anim.SetTrigger("TakeDamage");
-        yield return new WaitForSeconds(1f);
         GameObject _bloodSpurtParticles = Instantiate(bloodSpurt, transform.position, Quaternion.identity);
         Destroy(_bloodSpurtParticles, 1.5f);
- 
-
+        anim.SetTrigger("TakeDamage");
+        yield return new WaitForSeconds(1f);
         pState.invincible = false;
     }
-
     void FlashWhileInvincible()
     {
-        sr.material.color = pState.invincible ? Color.Lerp(Color.white, Color.red, Mathf.PingPong(Time.time * hitFlashSpeed, 1.0f)) : Color.white;
+        sr.material.color = pState.invincible ? Color.Lerp(Color.white, Color.black, Mathf.PingPong(Time.time * hitFlashSpeed, 1.0f)) : Color.white;
     }
     void RestoreTimeScale()
     {
@@ -417,7 +458,6 @@ public class PlayerController : MonoBehaviour
             {
                 health = Mathf.Clamp(value, 0, maxHealth);
 
-
                 if (onHealthChangedCallback != null)
                 {
                     onHealthChangedCallback.Invoke();
@@ -425,17 +465,16 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
     void Heal()
     {
-        if(Input.GetButton("Healing") && Health <maxHealth && Mana > 0 && !pState.jumping && !pState.dashing)
+        if (Input.GetButton("Cast/Heal") && castOrHealtimer > 0.05f && Health < maxHealth && Mana > 0 && Grounded() && !pState.dashing)
         {
             pState.healing = true;
             anim.SetBool("Healing", true);
 
             //healing
             healTimer += Time.deltaTime;
-            if(healTimer >= timeToHeal)
+            if (healTimer >= timeToHeal)
             {
                 Health++;
                 healTimer = 0;
@@ -443,7 +482,6 @@ public class PlayerController : MonoBehaviour
 
             //drain mana
             Mana -= Time.deltaTime * manaDrainSpeed;
-
         }
         else
         {
@@ -457,12 +495,79 @@ public class PlayerController : MonoBehaviour
         get { return mana; }
         set
         {
-            if(mana != value)
+            //if mana stats change
+            if (mana != value)
             {
                 mana = Mathf.Clamp(value, 0, 1);
                 manaStorage.fillAmount = Mana;
             }
         }
+    }
+
+    void CastSpell()
+    {
+        if (Input.GetButtonUp("Cast/Heal") && castOrHealtimer <= 0.05f && timeSinceCast >= timeBetweenCast && Mana >= manaSpellCost)
+        {
+            pState.casting = true;
+            timeSinceCast = 0;
+            StartCoroutine(CastCoroutine());
+        }
+        else
+        {
+            timeSinceCast += Time.deltaTime;
+        }
+
+        if (Grounded())
+        {
+            //disable downspell if on the ground
+            downSpellFireball.SetActive(false);
+        }
+        //if down spell is active, force player down until grounded
+        if (downSpellFireball.activeInHierarchy)
+        {
+            rb.linearVelocity += downSpellForce * Vector2.down;
+        }
+    }
+    IEnumerator CastCoroutine()
+    {
+        anim.SetBool("Casting", true);
+        yield return new WaitForSeconds(0.15f);
+
+        //side cast
+        if (yAxis == 0 || (yAxis < 0 && Grounded()))
+        {
+            GameObject _fireBall = Instantiate(sideSpellFireball, SideAttackTransform.position, Quaternion.identity);
+
+            //flip fireball
+            if (pState.lookingRight)
+            {
+                _fireBall.transform.eulerAngles = Vector3.zero; // if facing right, fireball continues as per normal
+            }
+            else
+            {
+                _fireBall.transform.eulerAngles = new Vector2(_fireBall.transform.eulerAngles.x, 180);
+                //if not facing right, rotate the fireball 180 deg
+            }
+            pState.recoilingX = true;
+        }
+
+        //up cast
+        else if (yAxis > 0)
+        {
+            Instantiate(upSpellExplosion, transform);
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        //down cast
+        else if (yAxis < 0 && !Grounded())
+        {
+            downSpellFireball.SetActive(true);
+        }
+
+        Mana -= manaSpellCost;
+        yield return new WaitForSeconds(0.35f);
+        anim.SetBool("Casting", false);
+        pState.casting = false;
     }
 
     public bool Grounded()
@@ -481,30 +586,27 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
-
-        if (!pState.jumping)
+        if (jumpBufferCounter > 0 && coyoteTimeCounter > 0 && !pState.jumping)
         {
-            if (jumpBufferCounter > 0 && coyoteTimeCounter > 0)
-            {
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce);
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce);
 
-                pState.jumping = true;
-            }
-            else if (!Grounded() && airJumpCounter < maxAirJumps && Input.GetButtonDown("Jump"))
-            {
-                pState.jumping = true;
-
-                airJumpCounter++;
-
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce);
-            }
+            pState.jumping = true;
         }
-
-        if (Input.GetButtonUp("Jump") && rb.linearVelocity.y > 0)
+        if (!Grounded() && airJumpCounter < maxAirJumps && Input.GetButtonDown("Jump"))
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+            pState.jumping = true;
 
+            airJumpCounter++;
+
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce);
+        } 
+
+        if (Input.GetButtonUp("Jump") && rb.linearVelocity.y > 3)
+        {
             pState.jumping = false;
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0); 
+
         }
 
         anim.SetBool("Jumping", !Grounded());

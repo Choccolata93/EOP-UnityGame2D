@@ -7,11 +7,8 @@ public class Zombie : Enemy
 {
     protected override void Start()
     {
+        base.Start();
         rb.gravityScale = 12f;
-    }
-    protected override void Awake()
-    {
-        base.Awake();
     }
 
     protected override void Update()
