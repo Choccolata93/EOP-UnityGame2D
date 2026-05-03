@@ -116,7 +116,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject upSpellExplosion;
     [SerializeField] GameObject downSpellFireball;
     float timeSinceCast;
-    float castOrHealtimer;
+    float castOrHealTimer;
     [Space(5)]
 
 
@@ -181,9 +181,9 @@ public class PlayerController : MonoBehaviour
 
         GetInputs();
         UpdateJumpVariables();
+        RestoreTimeScale();
 
         if (pState.dashing) return;
-        RestoreTimeScale();
         FlashWhileInvincible();
         Move();
         Heal();
@@ -218,11 +218,11 @@ public class PlayerController : MonoBehaviour
 
         if(Input.GetButton("Cast/Heal"))
         {
-            castOrHealtimer += Time.deltaTime;
+            castOrHealTimer += Time.deltaTime;
         }
         else
         {
-            castOrHealtimer = 0;
+            castOrHealTimer = 0;
         }
     }
 
@@ -279,6 +279,8 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator WalkIntoNewScene(Vector2 _exitDir, float _delay)
     {
+        pState.invincible = true;
+
         if(_exitDir.y > 0)
         {
             rb.linearVelocity = jumpForce * _exitDir;
@@ -292,6 +294,7 @@ public class PlayerController : MonoBehaviour
 
         Flip();
         yield return new WaitForSeconds(_delay);
+        pState.invincible = false;
         pState.cutscene = false;
     }
 
@@ -443,7 +446,7 @@ public class PlayerController : MonoBehaviour
 
     void FlashWhileInvincible()
     {
-        if(pState.invincible)
+        if(pState.invincible && !pState.cutscene)
         {
             if(Time.timeScale > 0.2 && canFlash)
             {
@@ -509,7 +512,7 @@ public class PlayerController : MonoBehaviour
     }
     void Heal()
     {
-        if (Input.GetButton("Cast/Heal") && castOrHealtimer > 0.05f && Health < maxHealth && Mana > 0 && Grounded() && !pState.dashing)
+        if (Input.GetButton("Cast/Heal") && castOrHealTimer > 0.1f && Health < maxHealth && Mana > 0 && Grounded() && !pState.dashing)
         {
             pState.healing = true;
             anim.SetBool("Healing", true);
@@ -548,7 +551,7 @@ public class PlayerController : MonoBehaviour
 
     void CastSpell()
     {
-        if (Input.GetButtonUp("Cast/Heal") && castOrHealtimer <= 0.05f && timeSinceCast >= timeBetweenCast && Mana >= manaSpellCost)
+        if (Input.GetButtonUp("Cast/Heal") && castOrHealTimer <= 0.1f && timeSinceCast >= timeBetweenCast && Mana >= manaSpellCost)
         {
             pState.casting = true;
             timeSinceCast = 0;
@@ -557,6 +560,10 @@ public class PlayerController : MonoBehaviour
         else
         {
             timeSinceCast += Time.deltaTime;
+        }
+        if(!Input.GetButton("Cast/Heal"))
+        {
+            castOrHealTimer = 0;
         }
 
         if (Grounded())

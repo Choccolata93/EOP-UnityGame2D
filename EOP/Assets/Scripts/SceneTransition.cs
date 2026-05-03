@@ -21,7 +21,6 @@ public class SceneTransition : MonoBehaviour
 
             StartCoroutine(PlayerController.Instance.WalkIntoNewScene(exitDirection, exitTime));
         }
-
         StartCoroutine(UIManager.Instance.sceneFader.Fade(SceneFader.FadeDirection.Out));
     }
 
@@ -30,6 +29,9 @@ public class SceneTransition : MonoBehaviour
         if (_other.CompareTag("Player"))
         {
             GameManager.Instance.transitionedFromScene = SceneManager.GetActiveScene().name;
+
+            PlayerController.Instance.pState.cutscene = true;
+            PlayerController.Instance.pState.invincible = true;
 
             StartCoroutine(UIManager.Instance.sceneFader.FadeAndLoadScene(SceneFader.FadeDirection.In, transitionTo));
         }
