@@ -22,12 +22,17 @@ public class Crawler : Enemy
 
     protected override void UpdateEnemyStates()
     {
-        switch (currentEnemyState)
+        if (health <= 0)
+        {
+            Death(0.05f);
+        }
+
+        switch (GetCurrentEnemyState)
         {
             case EnemyStates.Crawler_Idle:
 
                 Vector3 _ledgeCheckStart = transform.localScale.x > 0 ? new Vector3(ledgeCheckX, 0) : new Vector3(-ledgeCheckX, 0);
-                Vector3 _wallCheckDir = transform.localScale.x > 0 ? transform.right : -transform.right;
+                Vector2 _wallCheckDir = transform.localScale.x > 0 ? transform.right : -transform.right;
 
                 if (!Physics2D.Raycast(transform.position + _ledgeCheckStart, Vector2.down, ledgeCheckY, whatIsGround)
                     || Physics2D.Raycast(transform.position, _wallCheckDir, ledgeCheckX, whatIsGround))

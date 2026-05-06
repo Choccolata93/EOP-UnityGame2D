@@ -219,7 +219,7 @@ MonoBehaviour:
   recoilYSpeed: 15
   health: 10
   maxHealth: 10
-  bloodSpurt: {fileID: 3709911852217093764, guid: 91181beb1eca0fe40aea347317f43125, type: 3}
+  bloodSpurt: {fileID: 4840480827419086865, guid: be02880842596944f8a91894cf22b8ba, type: 3}
   hitFlashSpeed: 10
   timeToHeal: 1
   manaStorage: {fileID: 0}
@@ -234,6 +234,7 @@ MonoBehaviour:
   upSpellExplosion: {fileID: 5487719472908406590, guid: 1397baab170c1e641a4d303fa89b6eec, type: 3}
   downSpellFireball: {fileID: 6217354672703375697}
   pState: {fileID: 0}
+  rb: {fileID: 0}
 --- !u!95 &5228335731434429843
 Animator:
   serializedVersion: 7
