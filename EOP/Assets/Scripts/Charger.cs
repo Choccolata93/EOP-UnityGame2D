@@ -20,6 +20,15 @@ public class Charger : Enemy
         rb.gravityScale = 12f;
     }
 
+    protected override void Update()
+    {
+        base.Update();
+        if (!PlayerController.Instance.pState.alive)
+        {
+            ChangeState(EnemyStates.Charger_Idle);
+        }
+    }
+
     protected override void UpdateEnemyStates()
     {
         if (health <= 0)
