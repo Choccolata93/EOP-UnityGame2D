@@ -17,8 +17,9 @@ public class Shade : Enemy
         }
         else
         {
-            Instance = this;
+             Instance = this;
         }
+        SaveData.Instance.SaveShadeData();
     }
 
     protected override void Start()
@@ -111,6 +112,7 @@ public class Shade : Enemy
             /*int LayerIgnorePlayer = LayerMask.NameToLayer("Ignore Player");
             gameObject.layer = LayerIgnorePlayer;*/
             PlayerController.Instance.RestoreMana();
+            SaveData.Instance.SavePlayerData();
             anim.SetTrigger("Death");
             Destroy(gameObject, 0.5f);
         }

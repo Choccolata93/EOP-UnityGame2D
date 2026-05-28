@@ -1,24 +1,43 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Bench : MonoBehaviour
 {
+    public bool inRange;
     public bool interacted;
 
-    void Start()
+    private void Update()
     {
-        
-    }
+        {
+            if (inRange && Input.GetButtonDown("Interact"))
+            {
+                interacted = true;
 
-    void Update()
-    {
-        
+                SaveData.Instance.benchSceneName = SceneManager.GetActiveScene().name;
+                SaveData.Instance.benchPos = new Vector2(gameObject.transform.position.x, gameObject.transform.position.y);
+                SaveData.Instance.SaveBench();
+                SaveData.Instance.SavePlayerData();
+
+                Debug.Log("Сохранение");
+            }
+        }
     }
 
     private void OnTriggerStay2D(Collider2D _collision)
     {
-        if(_collision.CompareTag("Player") && Input.GetButtonDown("Interact"))
+        if (_collision.CompareTag("Player")) inRange = true;
+    }
+
+    private void OnTriggerExit2D(Collider2D _collision)
+    {
+        if(_collision.CompareTag("Player"))
         {
-            interacted = true; 
+            if (_collision.CompareTag("Player"))
+            {
+                inRange = false;
+                interacted = false;
+            }
         }
     }
 

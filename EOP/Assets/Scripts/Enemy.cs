@@ -74,6 +74,8 @@ public class Enemy : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (GameManager.Instance.gameIsPaused) return;
+
         if(isRecoiling)
         {
             if(recoilTimer < recoilLength)

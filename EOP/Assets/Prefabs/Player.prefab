@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 7008563234497532802}
   - component: {fileID: 5228335731434429843}
   - component: {fileID: 7836824156812733077}
+  - component: {fileID: 8027054668834493108}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -36,6 +37,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7281571563362666935}
+  - {fileID: 1052893377182247679}
   - {fileID: 5173161439333234516}
   - {fileID: 2079217247839340490}
   - {fileID: 5506448300053537245}
@@ -191,6 +193,13 @@ MonoBehaviour:
   jumpBufferFrames: 1
   coyoteTime: 0.1
   maxAirJumps: 1
+  wallSlidingSpeed: 2
+  wallCheck: {fileID: 0}
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  wallJumpingDuration: 0
+  wallJumpingPower: {x: 0, y: 0}
   groundCheckPoint: {fileID: 7281571563362666935}
   groundCheckY: 0.2
   groundCheckX: 0.4
@@ -219,6 +228,8 @@ MonoBehaviour:
   recoilYSpeed: 15
   health: 10
   maxHealth: 10
+  maxTotalHealth: 10
+  heartShards: 0
   bloodSpurt: {fileID: 4840480827419086865, guid: be02880842596944f8a91894cf22b8ba, type: 3}
   hitFlashSpeed: 10
   timeToHeal: 1
@@ -226,6 +237,7 @@ MonoBehaviour:
   mana: 0.5
   manaDrainSpeed: 0.2
   manaGain: 0.3
+  halfMana: 0
   manaSpellCost: 0.3
   timeBetweenCast: 0.5
   spellDamage: 10000
@@ -235,6 +247,12 @@ MonoBehaviour:
   downSpellFireball: {fileID: 6217354672703375697}
   pState: {fileID: 0}
   rb: {fileID: 0}
+  unlockedWallJump: 0
+  unlockedDash: 0
+  unlockedVarJump: 0
+  unlockedSideCast: 0
+  unlockedUpCast: 0
+  unlockedDownCast: 0
 --- !u!95 &5228335731434429843
 Animator:
   serializedVersion: 7
@@ -278,6 +296,19 @@ MonoBehaviour:
   healing: 0
   casting: 0
   cutscene: 0
+  alive: 0
+--- !u!114 &8027054668834493108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1073754380147178029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf72228f4f0a26b438bd04dee4b001f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DestroyInMainMenu
 --- !u!1 &2020043238921988488
 GameObject:
   m_ObjectHideFlags: 0
@@ -305,6 +336,37 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.074, y: -1.31, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5339012960669842184}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2840340917578685135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1052893377182247679}
+  m_Layer: 0
+  m_Name: Wall Check
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1052893377182247679
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2840340917578685135}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.8, y: -0.587, z: 0}
+  m_LocalScale: {x: 1.4285713, y: 1.4285713, z: 1.4285713}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5339012960669842184}

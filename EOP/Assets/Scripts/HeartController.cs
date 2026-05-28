@@ -7,16 +7,6 @@ public class HeartController : MonoBehaviour
     private Image[] heartFills;
     public Transform heartsParent;
     public GameObject heartContainerPrefab;
-    // Start is called before the first frame update
-    void Start()
-    {
-        heartContainers = new GameObject[PlayerController.Instance.maxHealth];
-        heartFills = new Image[PlayerController.Instance.maxHealth];
-
-        PlayerController.Instance.onHealthChangedCallback += UpdateHeartsHUD;
-        InstantiateHeartContainers();
-        UpdateHeartsHUD();
-    }
 
     // Update is called once per frame
     void Update()
@@ -51,15 +41,22 @@ public class HeartController : MonoBehaviour
             }
         }
     }
-    void InstantiateHeartContainers()
+    public void InstantiateHeartContainers()
     {
-        for (int i = 0; i < PlayerController.Instance.maxHealth; i++)
+        heartContainers = new GameObject[PlayerController.Instance.maxTotalHealth];
+        heartFills = new Image[PlayerController.Instance.maxTotalHealth];
+
+        for (int i = 0; i < PlayerController.Instance.maxTotalHealth ; i++)
         {
             GameObject temp = Instantiate(heartContainerPrefab);
             temp.transform.SetParent(heartsParent, false);
             heartContainers[i] = temp;
             heartFills[i] = temp.transform.Find("HeartFill").GetComponent<Image>();
         }
+
+        PlayerController.Instance.onHealthChangedCallback += UpdateHeartsHUD;
+        UpdateHeartsHUD();
+
     }
     void UpdateHeartsHUD()
     {

@@ -11,6 +11,8 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] GameObject deathScreen;
 
+    public GameObject mapHandler;
+
     [SerializeField] GameObject halfMana, fullMana;
 
     public enum ManaState

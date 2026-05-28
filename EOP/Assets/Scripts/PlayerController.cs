@@ -24,9 +24,19 @@ public class PlayerController : MonoBehaviour
     private int airJumpCounter = 0; 
     [SerializeField] private int maxAirJumps; 
 
-    private float gravity; 
+    private float gravity;
     [Space(5)]
 
+    [Header("Ground Check Settings:")]
+    [SerializeField] private float wallSlidingSpeed = 2f;
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private LayerMask wallLayer;
+    [SerializeField] private float wallJumpingDuration;
+    [SerializeField] private Vector2 wallJumpingPower;
+    float wallJumpingDirection;
+    bool isWallSliding;
+    bool isWallJumping;
+    [Space(5)]
 
     [Header("Ground Check Settings:")]
     [SerializeField] private Transform groundCheckPoint; 
@@ -83,6 +93,9 @@ public class PlayerController : MonoBehaviour
     [Header("Health Settings")]
     public int health;
     public int maxHealth;
+    public int maxTotalHealth = 10;
+    public int heartShards;
+
     [SerializeField] GameObject bloodSpurt;
     [SerializeField] float hitFlashSpeed;
     public delegate void OnHealthChangedDelegate();
@@ -98,7 +111,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float mana;
     [SerializeField] float manaDrainSpeed;
     [SerializeField] float manaGain;
-    bool halfMana;
+    public bool halfMana;
     [Space(5)]
 
     [Header("Spell Settings")]
@@ -127,8 +140,20 @@ public class PlayerController : MonoBehaviour
     private float xAxis, yAxis;
     private bool attack = false;
     private bool canFlash = true;
+    bool openMap;
+
 
     public static PlayerController Instance;
+
+    //unlocking
+    public bool unlockedWallJump;
+    public bool unlockedDash;
+    public bool unlockedVarJump;
+    public bool unlockedSideCast;
+    public bool unlockedUpCast;
+    public bool unlockedDownCast;
+
+
 
     private void Awake()
     {
@@ -150,7 +175,6 @@ public class PlayerController : MonoBehaviour
 
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
-
         anim = GetComponent<Animator>();
 
         gravity = rb.gravityScale;
@@ -159,6 +183,16 @@ public class PlayerController : MonoBehaviour
         manaStorage.fillAmount = Mana;
 
         Health = maxHealth;
+
+        SaveData.Instance.LoadPlayerData();
+
+        FindFirstObjectByType<HeartController>().InstantiateHeartContainers();
+
+        if(Health == 0)
+        {
+            pState.alive = false;
+            GameManager.Instance.RespawnPlayer();
+        }
     }
 
     private void OnDrawGizmos()
@@ -171,11 +205,14 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.gameIsPaused) return;
+
         if (pState.cutscene) return;
 
         if (pState.alive)
         {
             GetInputs();
+            ToggleMap();
         }
 
         UpdateJumpVariables();
@@ -190,12 +227,24 @@ public class PlayerController : MonoBehaviour
 
         if (pState.healing) return;
 
+        //тут что-то
         if (pState.alive)
         {
-            Flip();
-            Move();
-            Jump();
-            StartDash();
+            if(!isWallJumping)
+            {
+                Flip();
+                Move();
+                Jump();
+            }
+            if(unlockedWallJump)
+            {
+                WallSide();
+                WallJump();
+            }
+            if(unlockedDash)
+            {
+                StartDash();
+            }
             Attack();
         }
 
@@ -225,8 +274,9 @@ public class PlayerController : MonoBehaviour
         xAxis = Input.GetAxisRaw("Horizontal");
         yAxis = Input.GetAxisRaw("Vertical");
         attack = Input.GetButtonDown("Attack");
+        openMap = Input.GetButton("Map");
 
-        /*if(Input.GetButton("Cast/Heal"))
+        /*if(Input.GetButton("Cast/Heal")) 
         {
             castOrHealTimer += Time.deltaTime;
         }
@@ -234,6 +284,18 @@ public class PlayerController : MonoBehaviour
         {
             castOrHealTimer = 0;
         }*/
+    }
+
+    void ToggleMap()
+    {
+        if(openMap)
+        {
+            UIManager.Instance.mapHandler.SetActive(true);
+        }
+        else
+        {
+            UIManager.Instance.mapHandler.SetActive(false);
+        }
     }
 
     void Flip()
@@ -521,6 +583,11 @@ public class PlayerController : MonoBehaviour
         GameObject _bloodSpurtParticles = Instantiate(bloodSpurt, transform.position, Quaternion.identity);
         Destroy(_bloodSpurtParticles, 1.5f);
         anim.SetTrigger("Death");
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        //GetComponent<BoxCollider2D>().enabled = false;
+
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
 
         yield return new WaitForSeconds(0.9f);
         StartCoroutine(UIManager.Instance.ActivateDeathScreen());
@@ -533,6 +600,11 @@ public class PlayerController : MonoBehaviour
     {
         if(!pState.alive)
         {
+            rb.constraints = RigidbodyConstraints2D.None;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            //GetComponent<BoxCollider2D>().enabled = true;
+            rb.simulated = true;
+
             pState.alive = true;
             halfMana = true;
             UIManager.Instance.SwitchMana(UIManager.ManaState.HalfMana);
@@ -587,7 +659,7 @@ public class PlayerController : MonoBehaviour
             healTimer = 0;
         }
     }
-    float Mana
+    public float Mana
     {
         get { return mana; }
         set
@@ -635,11 +707,11 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator CastCoroutine()
     {
-        anim.SetBool("Casting", true);
-        yield return new WaitForSeconds(0.15f);
-
-        if (yAxis == 0 || (yAxis < 0 && Grounded()))
+        //side cast
+        if ((yAxis == 0 || (yAxis < 0 && Grounded())) && unlockedSideCast )
         {
+            anim.SetBool("Casting", true);
+            yield return new WaitForSeconds(0.15f);
             GameObject _fireBall = Instantiate(sideSpellFireball, SideAttackTransform.position, Quaternion.identity);
 
             if (pState.lookingRight)
@@ -651,21 +723,36 @@ public class PlayerController : MonoBehaviour
                 _fireBall.transform.eulerAngles = new Vector2(_fireBall.transform.eulerAngles.x, 180);
             }
             pState.recoilingX = true;
+
+            Mana -= manaSpellCost;
+            yield return new WaitForSeconds(0.35f);
         }
 
-        else if (yAxis > 0)
+        //up cast
+        else if (yAxis > 0 && unlockedUpCast)
         {
+            anim.SetBool("Casting", true);
+            yield return new WaitForSeconds(0.15f);
+
             Instantiate(upSpellExplosion, transform);
             rb.linearVelocity = Vector2.zero;
+
+            Mana -= manaSpellCost;
+            yield return new WaitForSeconds(0.35f);
         }
 
-        else if (yAxis < 0 && !Grounded())
+        //down cast
+        else if ((yAxis < 0 && !Grounded()) && unlockedDownCast)
         {
+            anim.SetBool("Casting", true);
+            yield return new WaitForSeconds(0.15f);
+
             downSpellFireball.SetActive(true);
+
+            Mana -= manaSpellCost;
+            yield return new WaitForSeconds(0.35f);
         }
 
-        Mana -= manaSpellCost;
-        yield return new WaitForSeconds(0.35f);
         anim.SetBool("Casting", false);
         pState.casting = false;
     }
@@ -692,7 +779,7 @@ public class PlayerController : MonoBehaviour
 
             pState.jumping = true;
         }
-        if (!Grounded() && airJumpCounter < maxAirJumps && Input.GetButtonDown("Jump"))
+        if (!Grounded() && airJumpCounter < maxAirJumps && Input.GetButtonDown("Jump") && unlockedVarJump)
         {
             pState.jumping = true;
 
@@ -733,5 +820,55 @@ public class PlayerController : MonoBehaviour
         {
             jumpBufferCounter = jumpBufferCounter - Time.deltaTime * 10;
         }
+    }
+
+    private bool Walled()
+    {
+        return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
+    }
+
+    void WallSide()
+    {
+        if(Walled () && !Grounded() && xAxis != 0)
+        {
+            isWallSliding = true;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Clamp(rb.linearVelocity.y, -wallSlidingSpeed, float.MaxValue));
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+    }
+    void WallJump()
+    {
+        if(isWallSliding)
+        {
+            isWallJumping = false;
+            wallJumpingDirection = !pState.lookingRight ? 1 : -1;
+
+            CancelInvoke(nameof(StopWallJumping));
+        }
+
+        if(Input.GetButtonDown("Jump") && isWallSliding)
+        {
+            isWallJumping = true;
+            rb.linearVelocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
+
+            dashed = false;
+            airJumpCounter = 0;
+
+            pState.lookingRight = !pState.lookingRight;
+            transform.eulerAngles = new Vector2(transform.eulerAngles.x, 180);
+
+            Invoke(nameof(StopWallJumping), wallJumpingDuration);
+        }
+    }
+
+    void StopWallJumping()
+    {
+        isWallJumping = false;
+        transform.eulerAngles = new Vector2(transform.eulerAngles.x, 0);
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
     }
 }
